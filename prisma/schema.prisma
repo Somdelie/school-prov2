@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define many-to-many relationship between School and Admin
+model SchoolAdmin {
+  id       String @id @default(uuid())
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId String
+  admin    Admin  @relation(fields: [adminId], references: [id])
+  adminId  String
+}
+
+// Define Admin model
+model Admin {
+  id        String        @id @default(uuid())
+  userId    String        @unique
+  firstName String
+  lastName  String
+  phone     String
+  email     String        @unique
+  schools   SchoolAdmin[]
+}
+
+// Define School model
+model School {
+  id         String        @id @default(uuid())
+  slug       String        @unique
+  schoolName String
+  admins     SchoolAdmin[]
+  classes    Class[]
+  teachers   Teacher[]
+  Student    Student[]
+}
+
+//class model
+model Class {
+  id        String         @id @default(uuid())
+  className String
+  school    School         @relation(fields: [schoolId], references: [id])
+  schoolId  String
+  streams   Stream[]
+  teachers  TeacherClass[] // Corrected many-to-many relation
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  Student   Student[]
+}
+
+//stream model
+model Stream {
+  id        String          @id @default(uuid())
+  title     String
+  slug      String          @unique
+  classId   String
+  class     Class           @relation(fields: [classId], references: [id])
+  teachers  TeacherStream[] // Corrected many-to-many relation
+  subjects  SubjectStream[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  Student   Student[]
+}
+
+// Define Teacher model
+model Teacher {
+  id           String           @id @default(uuid())
+  firstName    String
+  lastName     String
+  profileImage String?
+  email        String           @unique
+  phone        String
+  gender       String
+  dateOfBirth  DateTime // Corrected type
+  nationality  String
+  address      String
+  salary       Float
+  schoolId     String
+  school       School           @relation(fields: [schoolId], references: [id])
+  classes      TeacherClass[] // Many-to-many relation
+  streams      TeacherStream[] // Many-to-many relation
+  subjects     TeacherSubject[] // Many-to-many relation
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// Define TeacherStream model
+model TeacherStream {
+  id        String  @id @default(uuid())
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId String
+  stream    Stream  @relation(fields: [streamId], references: [id])
+  streamId  String
+}
+
+model TeacherClass {
+  id        String  @id @default(uuid())
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId String
+  class     Class   @relation(fields: [classId], references: [id])
+  classId   String
+}
+
+// Define Subject model
+model Subject {
+  id        String           @id @default(uuid())
+  title     String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  teachers  TeacherSubject[] // Many-to-many relation
+  streams   SubjectStream[] // Many-to-many relation
+}
+
+// Define SubjectStream model
+model SubjectStream {
+  id        String  @id @default(uuid())
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId String
+  stream    Stream  @relation(fields: [streamId], references: [id])
+  streamId  String
+}
+
+// Define TeacherSubject model
+model TeacherSubject {
+  id        String  @id @default(uuid())
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId String
+}
+
+// Define Student model class can have many students
+model Student {
+  id              String   @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String   @unique
+  password        String
+  imageUrl        String?
+  dateOfBirth     String
+  gender          String
+  nationality     String
+  state           String?
+  city            String?
+  address         String?
+  studentNumber   String   @unique
+  parentFirstName String
+  parentLastName  String
+  parentEmail     String
+  parentPhone     String
+  role            String   @default("PARENT")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  classId         String
+  schoolId        String
+  streamId        String
+
+  // Relations
+  school School  @relation(fields: [schoolId], references: [id])
+  class  Class   @relation(fields: [classId], references: [id])
+  stream Stream? @relation(fields: [streamId], references: [id])
+
+  @@map("students")
+}
