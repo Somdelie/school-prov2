@@ -160,6 +160,15 @@ export async function getSchoolBySlug(slug: string) {
           },
         },
         teachers: true,
+        Student: {
+          include: {
+            class: {
+              include: {
+                streams: true,
+              },
+            },
+          },
+        },
         admins: {
           include: {
             admin: true,
